@@ -1,0 +1,1 @@
+public record TicketDto(Guid Id, string Title, TicketStatus Status, TicketSeverity Severity);

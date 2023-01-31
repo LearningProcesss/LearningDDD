@@ -1,0 +1,1 @@
+public record CreateTicketCommand(string Title, TicketStatus Status, TicketSeverity Severity);
