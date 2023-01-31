@@ -10,13 +10,21 @@ public class TicketRepositoryTests : IClassFixture<DataContextInMemoryClassFixtu
     }
 
     [Fact]
+    public async Task GuardAgainstNullParameter()
+    {
+        ITicketRepository sut = new TicketRepository(memoryContextFixture.DddContext);
+
+        await Assert.ThrowsAsync<ArgumentNullException>(() => sut.Create(null));
+    }
+
+    [Fact]
     public async Task CreateValidPersistenceModel()
     {
-        Guid id = Guid.NewGuid();
-
-        TicketAggregate aggregate = new TicketAggregate(id, "Title", TicketStatus.Assigned, TicketSeverity.Blocking);
-
         ITicketRepository sut = new TicketRepository(memoryContextFixture.DddContext);
+
+        Guid id = sut.NextId();
+
+        TicketAggregate aggregate = new TicketAggregate(id, "Title", TicketStatus.Assigned, TicketSeverity.Blocking, new[] { new CommentEntity(sut.NextId(), "comment") });
 
         await sut.Create(aggregate);
 

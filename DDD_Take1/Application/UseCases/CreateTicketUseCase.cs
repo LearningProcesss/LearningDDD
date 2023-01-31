@@ -8,14 +8,17 @@ public class CreateTicketUseCase : IUseCase<CreateTicketCommand, TicketDto>
     }
     public async Task<TicketDto> Handle(CreateTicketCommand input)
     {
-        // a service that create guid
-
-        Guid guid = Guid.NewGuid();
-
-        TicketAggregate entity = new(guid, input.Title, input.Status, input.Severity);
+        TicketAggregate entity = new(ticketRepository.NextId(),
+                                     input.Title,
+                                     input.Status,
+                                     input.Severity,
+                                     new[] 
+                                    { 
+                                        new CommentEntity(ticketRepository.NextId(), input.Comment) 
+                                    });
 
         await ticketRepository.Create(entity);
 
-        return new TicketDto(guid, entity.Title, entity.Status, entity.Severity);
+        return new TicketDto(entity.Id, entity.Title, entity.Status, entity.Severity);
     }
 }

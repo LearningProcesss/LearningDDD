@@ -1,7 +1,6 @@
 public class TicketRepository : ITicketRepository
 {
     private readonly DddContext context;
-    private readonly IMapper mapper;
 
     public TicketRepository(DddContext context)
     {
@@ -9,8 +8,10 @@ public class TicketRepository : ITicketRepository
         
         this.context = context;
     }
+
     public async Task Create(TicketAggregate aggregate)
     {
+        ArgumentNullException.ThrowIfNull(aggregate, nameof(aggregate));
         // automapper hides Domain Entity construction. But i'm using constructor and not property mapping. 
         // So valid entity rules by constructor should apply anyway.
         // TicketModel ticketModel = mapper.Map<TicketModel>(aggregate);
@@ -26,5 +27,10 @@ public class TicketRepository : ITicketRepository
         await context.Tickets.AddAsync(model);
 
         await context.SaveChangesAsync();
+    }
+
+    public Guid NextId()
+    {
+        return Guid.NewGuid();
     }
 }

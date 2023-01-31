@@ -1,7 +1,6 @@
 # Repository
 
-A Repository is a collection-like interface that is used by the
-Domain and Application Layers to access to the data
+A Repository is a collection-like interface that is used by the Domain and Application Layers to access to the data
 persistence system (the database) to read and write the
 Business Objects, generally the Aggregates.
 

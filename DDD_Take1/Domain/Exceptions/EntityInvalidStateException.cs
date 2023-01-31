@@ -16,17 +16,25 @@ public class EntityInvalidStateException : Exception
     {
     }
     
-    public static void ThrowIfNull([NotNull]object? input, [CallerArgumentExpression("argument")] string? name = null)
+    public static void ThrowIfNull([NotNull]string? argument, [CallerArgumentExpression("argument")] string? paramName = null)
     {
-        if(input is null)
+        if(argument is null)
         {
             throw new EntityInvalidStateException();
         }
     }
 
-    public static void ThrowIfNullOrEmptyOrWhiteSpace([NotNull]string? input, [CallerArgumentExpression("argument")] string? name = null)
+    public static void ThrowIfNullOrEmptyOrWhiteSpace([NotNull]string? argument, [CallerArgumentExpression("argument")] string? paramName = null)
     {
-        if(string.IsNullOrEmpty(input) || string.IsNullOrWhiteSpace(input))
+        if(string.IsNullOrEmpty(argument) || string.IsNullOrWhiteSpace(argument))
+        {
+            throw new EntityInvalidStateException();
+        }
+    }
+
+    public static void ThrowIfEmpty([NotNull]Guid argument, [CallerArgumentExpression("argument")] string? paramName = null)
+    {
+        if(argument == Guid.Empty)
         {
             throw new EntityInvalidStateException();
         }
