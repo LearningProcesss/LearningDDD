@@ -11,7 +11,7 @@ It differs from ***Value Object*** beause of it's identity.
 In a CRUD system everithing is a value but a system like that can't stands   
 when comlexity grows, too complicated business rules comes in, and where DDD and Entity shines with a low control level.  
 
-***Entity*** is composed by ***Unique Identity***, attributes expressed as primitives, collection or ***Value Object*** and by behaviours expressed with by methods or delegated to ***Value Object***.
+***Entity*** is composed by ***Unique Identity***, attributes expressed by primitives, collection and by behaviours expressed with by methods or delegated to ***Value Object***.
 
 ### Unique Identity
 
@@ -126,7 +126,33 @@ Private setters or Guard must be used to hide or prevent field used as or part o
 ***Surrogate Identity***
 
 
-### 
+### Design Entity
+
+Using ***Ubiquitos Language*** and speaking with domain experts design an entity stripping down with requirements
+
+***Characteristics***
+
+- recognised by requirements, is the object uniquely identified? should the object support changes over time?  
+  If both yes the object is clearly an ***Entity***
+- what are those properties that never can be changed and define the entity identity?
+- which type of ***Identity***? simple string or ***Value Object***
+- what are the most basic propertyies immediately implementable?
+- skip Aggregate at first, but take note for future.
+
+***Behaviours***
+
+- encapsulate behaviour in Entity method
+- avoid placing too much responsability to Entity. Delegate to a ***Value Object***, part of the Entity, logical group of data and behaviours. Recognize Value Object when data are immutable.  
+- if you dont find a perfect fit for a behaviour in any Entity maybe higher level coordinator is needed, place this beahaviour in ***Domain Service***
+
+### Construction
+
+When instantiate and Entity use a constructor that captures enough state to fully identify it and enable clients to find it.  
+If you use early identity generation it must be passed to constructor.
+Each constructor parameter must be delegated to the respective setter tha self-encapsulate contractual condition (validation).  
+Use a ***Factory*** for complex Entity instantiation.  
+
+### Validation
 
 
 

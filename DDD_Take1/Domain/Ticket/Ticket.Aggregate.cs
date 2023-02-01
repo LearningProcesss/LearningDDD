@@ -8,13 +8,36 @@ public class TicketAggregate
 
     public TicketAggregate(Guid id, string title, TicketStatus status, TicketSeverity severity, IEnumerable<CommentEntity>? comments)
     {
+        // EnforceInvariant();
+        SetId(id);
+        SetTitle(title);
+        SetStatus(status);
+        SetSeverity(severity);
+
+        this.Comments = comments?.ToList() ?? new List<CommentEntity>();
+    }
+
+    public void SetId(Guid id)
+    {
         EntityInvalidStateException.ThrowIfEmpty(id, nameof(id));
-        EntityInvalidStateException.ThrowIfNullOrEmptyOrWhiteSpace(title, nameof(title));
 
         this.Id = id;
+    }
+
+    public void SetTitle(string title)
+    {
+        EntityInvalidStateException.ThrowIfNullOrEmptyOrWhiteSpace(title, nameof(title));
+
         this.Title = title;
+    }
+
+    public void SetStatus(TicketStatus status)
+    {
         this.Status = status;
+    }
+
+    public void SetSeverity(TicketSeverity severity)
+    {
         this.Severity = severity;
-        this.Comments = comments?.ToList() ?? new List<CommentEntity>();
     }
 }
