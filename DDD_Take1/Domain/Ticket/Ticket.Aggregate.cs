@@ -17,7 +17,7 @@ public class TicketAggregate
         this.Comments = comments?.ToList() ?? new List<CommentEntity>();
     }
 
-    public void SetId(Guid id)
+    private void SetId(Guid id)
     {
         EntityInvalidStateException.ThrowIfEmpty(id, nameof(id));
 
