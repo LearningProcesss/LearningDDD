@@ -11,7 +11,7 @@ prior to that differs from ***Value Object***.
 In a CRUD system everithing is a value but a system like that can't stands   
 when comlexity grows, too complicated business rules comes in, and where DDD and Entity shines with a low control level.  
 
-***Entity*** is composed by ***Unique Identity***, attributes expressed by primitives, collection and by behaviours expressed with by methods or delegated to ***Value Object***.
+***Entity*** is composed by ***Unique Identity***, attributes expressed by primitives, collections and by behaviours expressed with by methods or delegated to ***Value Object***.
 
 ### Unique Identity
 
@@ -59,7 +59,7 @@ Two Entities are considered equal if they have same Identity even when they have
 
     public class ProductId : ValueObject
     {
-        private readonly id;
+        private readonly string id;
 
         public ProductId(string id)
         {
@@ -143,8 +143,8 @@ Using ***Ubiquitos Language*** and speaking with domain experts design an entity
 
 ***Behaviours***
 
-- Should be behaviour oriented. Entity should expose expressive methods taht communicate domain beahviour instead of exposing state.  
-- encapsulate behaviour in Entity method but avoid placing too much responsability to Entity.  
+- Should be behaviour oriented. Entity should expose expressive methods that communicate domain beahviour instead of exposing state.  
+- encapsulate behaviour in Entity method but avoid placing too much responsability to it.  
   Delegate to a ***Value Object***, part of the Entity, logical group of immutable data and behaviours.  
   Ideally, you should always put most of the business logic into value objects. Entities in this situation would act as wrappers upon them and represent more high-level functionality.  
   Recognize Value Object when data are immutable but belongs to the Entity.  
@@ -161,18 +161,21 @@ Use a ***Factory*** for complex Entity instantiation.
 
 ### Validation
 
-There are three major validation "type": **Validating Attributes/Properties**, **Validating Whole Object**, **Validating Composition of objects**.  
+Vaughn Vernon expose three major validation concepts: **Validating Attributes/Properties**, **Validating Whole Object**, **Validating Composition of objects**.  
+Those applies to fundamental DDD validation concepts: **always valid - always contextually valid**, **invariant**, **deferred validation**.
 
 One of the main aspect is that an ***Entity*** must always have consistent state (always valid) but "always contextually valid" also.  
-"always valid" can be achieved with **self-encapsulation** validation and tryExecute pattern.     
-"always contextually valid" when your validation have to be aligned with business requirements.
+"always valid" can be achieved with **self-encapsulation** validation.     
+"always contextually valid" when your validation have to be aligned with business requirements.  
 
 **Invariants** are generally business rules/enforcements/requirements that you impose to maintain the integrity of an object at any given time.  
+Scott Millet and Nick Tunes, says:
+"Given that Entity or Value Object (an Hotel for example), what makes this type really this type? What does it mean for a type to be that type?"
 
 You can think about **validation** as the process of approving a given object state,  
 while **invariant** enforcement happens before that state has even been reached.  
 
-***Validating Attributes/Properties***
+***Validating Attributes/Properties - always valid/always contextually valid/invariant*** 
 
 Use property self-encapsulation to prevent any type of invalid state on both ***Entity*** and ***Value Object***.
 
@@ -181,7 +184,7 @@ Design your classes so that all access to data, even fron within the same class,
 
 ```c#
 /*
-Value Object EmailAddress is "always valid" thanks to the self-encapsulation made at initialization time, it's state is guarantee that is always consistent and valid.
+Value Object EmailAddress is "always valid" thanks to the self-encapsulation done at initialization time, it's state is guarantee that is always consistent and valid.
 */
 public class EmailAddress 
 {
@@ -205,6 +208,8 @@ public class EmailAddress
         {
             throw new DomainExcpetionOfYourType();
         }
+
+        this.emailAddress = emailAddress;
     }
 }
 
@@ -236,12 +241,150 @@ public class FlighBooking
     }
 }
 
+/*
+Enity Hotel invariant rule is applied before state can reach properties.
+*/
+public class Hotel
+{
+    public Guid Id { get; private set; }
+    public HotelRoomSummary Rooms { get; private set; }
+
+    public Hotel(Guid id, HotelRoomSummary rooms, ..)
+    {
+        EnforceInvariant(rooms);
+        this.Id = id;
+        this.Rooms = rooms;
+        ..
+    }
+
+    private void EnforceInvariant(HotelRoomSummary rooms)
+    {
+        bool hotelIsNotAnHotel = rooms.NumberSingleRooms < 1
+                                 &&
+                                 rooms.NumberDoubleRooms < 1
+                                 &&
+                                 rooms.NumberFamilyRooms < 1;
+
+        if(hotelIsNotAnHotel)
+        {
+            throw new DomainExcpetionOfYourType(); 
+        }
+    }
+}
 
 ```
 
-***Validating Whole Object***
+**Other approaches**
 
+***Is Valid***
 
+The benefit of this approach is that it allows you to concentrate the relevant domain logic within the aggregate thus preventing its leakage. The knowledge regarding what it means to be ready for delivery should clearly belong to the Order class itself as that knowledge fully depends on the data that resides inside that class.
+
+There’s a drawback to this implementation too, and it’s quite substantial. In order to validate itself, the entity must enter an invalid state first. And that means the aggregate no longer maintains its consistency boundary. Its invariants are held loosely and can be broken at any time.
+
+This drawback is a deal-breaker. Invariants that lie within an aggregate should be kept by that aggregate at all times. Their violation leads to many nasty situations, potential data corruption is one of them.
+
+```c#
+
+public class Order
+{
+    public OrderStatus Status { get; private set; } = OrderStatus.InProgress;
+    public string DeliveryAddress { get; set; }
+    public DateTime DeliveryTime { get; set; }
+ 
+    public IReadOnlyList<string> ValidateForDelivery()
+    {
+        var errors = new List<string>();
+ 
+        if (string.IsNullOrWhiteSpace(DeliveryAddress))
+            errors.Add("Must specify delivery address");
+ 
+        if (DeliveryTime.DayOfWeek == DayOfWeek.Sunday)
+            errors.Add("Cannot deliver on Sundays");
+ 
+        return errors;
+    }
+ 
+    public void Deliver()
+    {
+        Status = OrderStatus.Delivering;
+    }
+}
+
+// inside Controller - Application UseCase - DomainService
+
+Order order = GetFromDatabase(model.OrderId);
+
+order.DeliveryAddress = model.Address;
+
+order.DeliveryTime = model.Time;
+
+IReadOnlyList<string> errors = order.ValidateForDelivery();
+
+if (errors.Any())
+{
+    // ModelState.AddModelError("", string.Join(", ", errors));
+
+    // return View();
+}
+
+order.Deliver();
+
+```
+
+***TryExecute pattern***
+
+Make the Deliver method do all the validations needed and either proceed with the delivery or return back any errors it encounters.  
+
+From the domain model purity standpoint, this approach is much better. The entity here both holds the domain knowledge and maintains its consistency. It’s impossible to transition it into an invalid state, the invariants are guaranteed to be preserved.
+
+```c#
+public class Order
+{
+    public OrderStatus Status { get; private set; } = OrderStatus.InProgress;
+    public string DeliveryAddress { get; private set; }
+    public DateTime DeliveryTime { get; private set; }
+ 
+    public IReadOnlyList<string> Deliver(string address, DateTime time)
+    {
+        var errors = new List<string>();
+ 
+        if (string.IsNullOrWhiteSpace(address))
+            errors.Add("Must specify delivery address");
+ 
+        if (time.DayOfWeek == DayOfWeek.Sunday)
+            errors.Add("Cannot deliver on Sundays");
+ 
+        if (errors.Any())
+            return errors;
+ 
+        DeliveryAddress = address;
+        DeliveryTime = time;
+        Status = OrderStatus.Delivering;
+ 
+        return errors;
+    }
+}
+ 
+public class OrderController
+{
+    public ActionResult Deliver(DeliveryViewModel model)
+    {
+        Order order = GetFromDatabase(model.OrderId);
+ 
+        IReadOnlyList<string> errors = order.Deliver(model.Address, model.Time);
+        if (errors.Any())
+        {
+            ModelState.AddModelError("", string.Join(", ", errors));
+            return View();
+        }
+ 
+        // Save the order and redirect to a success page
+    }
+}
+```
+
+***Validating Whole Object - deferred***
 
 ## Resources used for this topic
 
@@ -250,5 +393,10 @@ public class FlighBooking
 |https://vaadin.com/blog/ddd-part-2-tactical-domain-driven-design|Entity behaviors|
 |https://enterprisecraftsmanship.com/posts/entity-vs-value-object-the-ultimate-list-of-differences/|Where place behaviours|
 |https://stackoverflow.com/questions/30190302/what-is-the-difference-between-invariants-and-validation-rules|Validation and invariants|
+|https://www.youtube.com/watch?app=desktop&v=JZetlRXdYeI|Always valid|
+|https://enterprisecraftsmanship.com/posts/validation-and-ddd/|Domain Validations|
+|https://enterprisecraftsmanship.com/posts/always-valid-vs-not-always-valid-domain-model/|Always valid|
+|http://www.kamilgrzybek.com/design/domain-model-validation/|Domain Validations|
+|https://enterprisecraftsmanship.com/posts/specification-pattern-always-valid-domain-model/|Domain Validation|
 
 ## Aggregate

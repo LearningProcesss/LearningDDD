@@ -47,6 +47,6 @@ public class TicketValidationNotificationHandler : IValidationNotificationHandle
 
     public void HandleError(string error)
     {
-
+        
     }
 }

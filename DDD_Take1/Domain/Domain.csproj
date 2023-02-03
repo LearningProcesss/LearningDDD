@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Using Include="System"></Using>
+    <Using Include="System.Linq"></Using>
+    <Using Include="System.Collections.Generic"></Using>
     <Using Include="System.Runtime.Serialization"></Using>
     <Using Include="Domain.Item"></Using>
     <Using Include="Domain.Entity"></Using>
