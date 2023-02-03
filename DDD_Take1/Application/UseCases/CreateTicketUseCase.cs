@@ -8,6 +8,8 @@ public class CreateTicketUseCase : IUseCase<CreateTicketCommand, TicketDto>
     }
     public async Task<TicketDto> Handle(CreateTicketCommand input)
     {
+        IValidationNotificationHandler validationNotification = new TicketValidationNotificationHandler();
+
         TicketAggregate entity = new(ticketRepository.NextId(),
                                      input.Title,
                                      input.Status,
@@ -16,6 +18,8 @@ public class CreateTicketUseCase : IUseCase<CreateTicketCommand, TicketDto>
                                     { 
                                         new CommentEntity(ticketRepository.NextId(), input.Comment) 
                                     });
+
+        entity.Validate(validationNotification);
 
         await ticketRepository.Create(entity);
 

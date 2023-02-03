@@ -164,12 +164,13 @@ Use a ***Factory*** for complex Entity instantiation.
 There are three major validation "type": **Validating Attributes/Properties**, **Validating Whole Object**, **Validating Composition of objects**.  
 
 One of the main aspect is that an ***Entity*** must always have consistent state (always valid) but "always contextually valid" also.  
-"always valid" can be achieved with **self-encapsulation** validation.     
+"always valid" can be achieved with **self-encapsulation** validation and tryExecute pattern.     
 "always contextually valid" when your validation have to be aligned with business requirements.
 
 **Invariants** are generally business rules/enforcements/requirements that you impose to maintain the integrity of an object at any given time.  
 
-You can think about validation as the process of approving a given object state, while invariant enforcement happens before that state has even been reached.  
+You can think about **validation** as the process of approving a given object state,  
+while **invariant** enforcement happens before that state has even been reached.  
 
 ***Validating Attributes/Properties***
 
@@ -180,7 +181,7 @@ Design your classes so that all access to data, even fron within the same class,
 
 ```c#
 /*
-Value Object EmailAddress is always valid thanks to the self-encapsulation made at initialization time, it's state is guarantee that is always consistent and valid.
+Value Object EmailAddress is "always valid" thanks to the self-encapsulation made at initialization time, it's state is guarantee that is always consistent and valid.
 */
 public class EmailAddress 
 {
@@ -208,7 +209,7 @@ public class EmailAddress
 }
 
 /*
-Entity FlighBooking is contextually valid when it's behaviour Reschedule is invoked.
+Entity FlighBooking is "always contextually valid" when it's behaviour Reschedule is invoked.
 It ensure through business policy that a fligh cant be changed if confirmed. 
 */
 public class FlighBooking

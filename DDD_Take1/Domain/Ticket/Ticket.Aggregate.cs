@@ -40,4 +40,9 @@ public class TicketAggregate
     {
         this.Severity = severity;
     }
+
+    public void Validate(IValidationNotificationHandler validationNotification)
+    {
+        (new TicketValidator(this, validationNotification)).Validate();
+    }
 }
