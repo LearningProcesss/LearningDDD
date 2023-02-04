@@ -1,27 +1,29 @@
 public class Item
 {
     public ItemId Id { get; private set; }
-    public VersionValueObject Version { get; private set; }
+    public VersionHistory VersionHistory { get; private set; }
     public string Classification { get; private set; }
     public int Status { get; private set; }
     public List<ItemId> Structure { get; private set; }
     public string Name { get; private set; }
     public string Description { get; private set; }
 
-    public Item(ItemId id, string classification, VersionValueObject version, int status, string name, string description)
+    public Item(ItemId id, string classification, VersionHistory versionHistory, int status, string name, string description, IEnumerable<ItemId> structure)
     {
-        ArgumentNullException.ThrowIfNull(id);
+        ArgumentValidationDomainException.ThrowIfNull(id);
+        ArgumentValidationDomainException.ThrowIfNull(versionHistory);
 
         Id = id;
-        Version = version;
+        VersionHistory = versionHistory;
         ChangeClassification(classification);
         ChangeStatus(status);
         ChangeName(name);
+        Structure = structure?.ToList() ?? new List<ItemId>();
     }
 
     public void ChangeClassification(string classification)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(classification, nameof(classification));
+        ArgumentValidationDomainException.ThrowIfNullOrEmpty(classification, nameof(classification));
 
         Classification = classification;
     }
@@ -38,21 +40,26 @@ public class Item
 
     public void ChangeName(string name)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(name, nameof(name));
+        ArgumentValidationDomainException.ThrowIfNullOrEmpty(name, nameof(name));
 
         Name = name; 
     }
 
     public void ChangeDescription(string description)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(description, nameof(description));
+        ArgumentValidationDomainException.ThrowIfNullOrEmpty(description, nameof(description));
 
         Description = description;
     }
 
     public void AddStructureItem(ItemId id)
     {
-        ArgumentNullException.ThrowIfNull(id, nameof(id));
+        ArgumentValidationDomainException.ThrowIfNull(id, nameof(id));
+
+        if(Structure.Any(item => item == id))
+        {
+            throw new StructureItemAlreadyExistsDomainException($"Item: {Id.Id} structure already contains {id.Id}");
+        }
 
         Structure.Add(id);
     }

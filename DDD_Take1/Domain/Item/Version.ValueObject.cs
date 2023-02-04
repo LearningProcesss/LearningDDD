@@ -22,21 +22,11 @@ public class VersionValueObject : ValueObject
         {
             throw new VersionNotValidDomainException("Version and Revision can't be lower than 1");
         }
-
-        // if (versionIndex < 1)
-        // {
-        //     throw new VersionNotValidDomainException("VersionIndex can't be lower than 1");
-        // }
-
-        // if (versionCount < 1)
-        // {
-        //     throw new VersionNotValidDomainException("VersionCount can't be lower than 1");
-        // }
     }
 
     public int ActualVersionIndex()
     {
-         return Ancestor is null ? 1 : Ancestor.ActualVersionIndex() + 1;
+        return Ancestor is null ? 1 : Ancestor.ActualVersionIndex() + 1;
     }
 
     public int ActualVersionCount()
@@ -52,50 +42,65 @@ public class VersionValueObject : ValueObject
     }
 }
 
-public abstract class ValueObject
+public sealed class VersionHistory : ValueObject
 {
-    protected static bool EqualOperator(ValueObject left, ValueObject right)
+    private readonly ItemId currentId;
+    private readonly IEnumerable<Version> versions;
+
+    public VersionHistory(ItemId currentId, IEnumerable<Version> versions)
     {
-        if (ReferenceEquals(left, null) ^ ReferenceEquals(right, null))
+        ArgumentValidationDomainException.ThrowIfNull(currentId);
+        ArgumentValidationDomainException.ThrowIfNull(versions);
+        this.currentId = currentId;
+        this.versions = versions;
+    }
+
+    public Version CurrentVersion()
+    {
+        return versions.First(history => history.ItemId == currentId);
+    } 
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return versions.Count();
+    }
+}
+
+public sealed class Version : ValueObject
+{
+    public ItemId ItemId { get; private set; }
+    public int Ver { get; private set; }
+    public int Rev { get; private set; }
+    public ItemId Ancestor { get; private set; }
+
+    public Version(ItemId itemId, int ver, int rev, ItemId ancestor)
+    {
+        EnsureInvariant(itemId, ver, rev, ancestor);
+        this.ItemId = itemId;
+        this.Ver = ver;
+        this.Rev = rev;
+        this.Ancestor = ancestor;
+    }
+
+    private void EnsureInvariant(ItemId itemId, int version, int revision, ItemId ancestor)
+    {
+        if (version <= 0)
         {
-            return false;
+            throw new VersionNotValidDomainException("Version can't be lower than 1");
         }
-        return ReferenceEquals(left, right) || left.Equals(right);
-    }
 
-    protected static bool NotEqualOperator(ValueObject left, ValueObject right)
-    {
-        return !(EqualOperator(left, right));
-    }
-
-    protected abstract IEnumerable<object> GetEqualityComponents();
-
-    public override bool Equals(object obj)
-    {
-        if (obj == null || obj.GetType() != GetType())
+        if (revision <= 0)
         {
-            return false;
+            throw new VersionNotValidDomainException("Revision can't be lower than 1");
         }
-
-        var other = (ValueObject)obj;
-
-        return this.GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
     }
 
-    public override int GetHashCode()
+    protected override IEnumerable<object> GetEqualityComponents()
     {
-        return GetEqualityComponents()
-            .Select(x => x != null ? x.GetHashCode() : 0)
-            .Aggregate((x, y) => x ^ y);
-    }
-
-    public static bool operator ==(ValueObject one, ValueObject two)
-    {
-        return EqualOperator(one, two);
-    }
-
-    public static bool operator !=(ValueObject one, ValueObject two)
-    {
-        return NotEqualOperator(one, two);
+        yield return ItemId;
+        yield return Ancestor;
+        yield return Ver;
+        yield return Rev;
+        yield return Ancestor;
     }
 }
