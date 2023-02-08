@@ -45,4 +45,16 @@ After initialization with constructor, no properties nor method to alter Value s
 When Value must change a complete replacement of the entire object should be done instead.
 
 3. conceptual whole  
+Valiue Object must be shaped and treated as a whole concept, can have single or multiple attributes related to eachother,
+any of them, together, collectovely describes a thing with a cohesive meaning.  
+Taken apart they do not provide the same meaning.  
+
+```c#
+
+public class ThingOfWorth
+{
+    
+}
+
+```
 
